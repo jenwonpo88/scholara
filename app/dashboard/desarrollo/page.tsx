@@ -64,11 +64,12 @@ const [hypothesis, setHypothesis] = useState<Hypothesis[]>([
 ])
 
 const [aiLoading, setAiLoading] = useState<number | null>(null)
+
 useEffect(() => {
-
-loadTasks()
-
+  loadTasks()
+  loadHypothesis()
 }, [])
+
 async function loadTasks() {
 
 setLoading(true)
@@ -86,6 +87,24 @@ const { data } = await supabase
 if (data) setTasks(data)
 
 setLoading(false)
+
+async function loadHypothesis() {
+  const { data } = await supabase
+    .from('paper_sections')
+    .select('*')
+    .eq('project_id', PROJECT_ID)
+    .like('section_key', 'hypothesis_%')
+    .order('section_key', { ascending: true })
+
+  if (data && data.length > 0) {
+    const loaded = data.map((sec: any) => ({
+      ...JSON.parse(sec.content),
+      saved: true,
+      editing: false,
+    }))
+    setHypothesis(loaded)
+  }
+}
 
 }
 async function addTask() {
@@ -144,19 +163,37 @@ const updated = [...hypothesis]
 setHypothesis(updated)
 
 }
-function saveH(idx: number) {
+async function saveH(idx: number) {
+  if (!hypothesis[idx].texto.trim()) { alert('Escribe el texto de la hipótesis'); return }
+  const h = hypothesis[idx]
+  const key = 'hypothesis_' + h.id
 
-if (!hypothesis[idx].texto.trim()) { alert('Escribe el texto de la hipótesis'); return }
+  const { data: existing } = await supabase
+    .from('paper_sections')
+    .select('id')
+    .eq('project_id', PROJECT_ID)
+    .eq('section_key', key)
+    .single()
 
-const updated = [...hypothesis]
+  const content = JSON.stringify({
+    id: h.id, label: h.label, titulo: h.titulo,
+    color: h.color, bg: h.bg, estado: h.estado,
+    texto: h.texto, soportada: h.soportada,
+    parcial: h.parcial, pendiente: h.pendiente,
+  })
 
-updated[idx].saved = true
+  if (existing) {
+    await supabase.from('paper_sections').update({ content }).eq('id', existing.id)
+  } else {
+    await supabase.from('paper_sections').insert({ project_id: PROJECT_ID, section_key: key, content })
+  }
 
-updated[idx].editing = false
-
-setHypothesis(updated)
-
+  const updated = [...hypothesis]
+  updated[idx].saved = true
+  updated[idx].editing = false
+  setHypothesis(updated)
 }
+
 function editH(idx: number) {
 
 const updated = [...hypothesis]
