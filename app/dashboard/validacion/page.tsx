@@ -5,7 +5,8 @@ import { supabase } from '../../../lib/supabase'
 
 import * as XLSX from 'xlsx'
 
-import Papa from 'papaparse'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Papa = require('papaparse')
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 const PROJECT_ID = process.env.NEXT_PUBLIC_PROJECT_ID!
