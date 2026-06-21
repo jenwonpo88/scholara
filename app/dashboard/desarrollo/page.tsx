@@ -87,6 +87,7 @@ const { data } = await supabase
 if (data) setTasks(data)
 
 setLoading(false)
+}
 
 async function loadHypothesis() {
   const { data } = await supabase
@@ -104,7 +105,6 @@ async function loadHypothesis() {
     }))
     setHypothesis(loaded)
   }
-}
 
 }
 async function addTask() {
